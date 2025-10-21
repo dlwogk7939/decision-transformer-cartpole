@@ -1,0 +1,9 @@
+torch==2.9.0
+torchvision==0.24.0
+torchaudio==2.9.0
+gymnasium==1.2.1
+stable-baselines3==2.7.0
+numpy==2.3.4
+pandas==2.3.3
+matplotlib==3.10.7
+cloudpickle==3.1.1

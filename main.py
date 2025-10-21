@@ -1,4 +1,8 @@
 import os
+
+# Ensure MPS falls back to CPU for unsupported ops before torch import.
+os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
+
 import gymnasium as gym
 import numpy as np
 import torch
@@ -8,15 +12,14 @@ from torch.utils.data import DataLoader
 
 from dataset import CartPoleTrajectoryDataset
 from decision_transformer import DecisionTransformer
-from generate_expert_data import generate_dataset
+from collect_expert_data import collect_dataset
 
 def get_device():      
     if torch.cuda.is_available():
         print("Using NVIDIA GPU")
         return torch.device("cuda")         # NVIDIA GPU
     elif torch.backends.mps.is_available() and torch.backends.mps.is_built():
-        print("Using Apple Silicon GPU")
-        os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
+        print("Using Apple Silicon GPU")        
         return torch.device("mps")          # Apple Silicon GPU    
     else:
         print("No GPU found, using CPU")
@@ -98,7 +101,7 @@ def train_transformer(
 def evaluate_transformer(
     model: DecisionTransformer,
     env_name: str = "CartPole-v1",
-    episodes: int = 100,
+    test_episodes: int = 100,
     target_return: float = 500.0,
 ):
     device = next(model.parameters()).device
@@ -110,7 +113,7 @@ def evaluate_transformer(
     returns = []
 
     with torch.no_grad():
-        for _ in range(episodes):
+        for _ in range(test_episodes):
             state, _ = env.reset()
             state = np.asarray(state, dtype=np.float32)
 
@@ -169,12 +172,13 @@ def evaluate_transformer(
 
 def main(    
     rollout_episodes: int = 100,
+    test_episodes: int = 100,
     input_fraction: float = 1.0,
     epochs: int = 5,
     transformer_size = 1,
     seed: int = 42,
 ):    
-    dataset_path = generate_dataset(rollout_episodes=rollout_episodes, seed=seed)
+    dataset_path = collect_dataset(rollout_episodes=rollout_episodes, seed=seed)
     model = train_transformer(
         dataset_path,
         transformer_size = transformer_size,
@@ -182,13 +186,25 @@ def main(
         input_fraction=input_fraction,
         seed=seed,
     )
-    avg_return, std_return, returns = evaluate_transformer(model)
+    avg_return, std_return, returns = evaluate_transformer(model, test_episodes = test_episodes)
+
+    if transformer_size == 0:
+        transformer_size_str = "small"
+    elif transformer_size == 1:
+        transformer_size_str = "medium"
+    else:
+        transformer_size_str = "large"
+    
     print(f"Decision Transformer average return: {avg_return:.2f} ± {std_return:.2f} over {len(returns)} episodes")
+    print("Parameters")
+    print(f"transformer size: {transformer_size_str}, epochs: {epochs}, input fraction: {input_fraction}")
+    print()    
 
 if __name__ == "__main__":    
     import argparse
     parser = argparse.ArgumentParser(description="CartPole Decision Transformer")
     parser.add_argument("--rollout_episodes", type=int, default=100)
+    parser.add_argument("--test_episodes", type=int, default=100)
     parser.add_argument("--input_fraction", type=float, default=1.0)
     parser.add_argument("--epochs", type=int, default=5)
     parser.add_argument("--transformer_size", type=int, default=1)
@@ -197,6 +213,7 @@ if __name__ == "__main__":
 
     main(
         rollout_episodes=args.rollout_episodes,
+        test_episodes=args.test_episodes,
         input_fraction=args.input_fraction,
         epochs=args.epochs,
         transformer_size=args.transformer_size,
