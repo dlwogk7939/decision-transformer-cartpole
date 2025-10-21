@@ -1,7 +1,6 @@
 # 🧠 Decision Transformer Performance Analysis on CartPole-v1
 
 **Author:** Jaeha Lee (The Ohio State University)  
-**GitHub Repository:** [https://github.com/dlwogk7939/decision-transformer-cartpole](https://github.com/dlwogk7939/decision-transformer-cartpole)
 
 ---
 
