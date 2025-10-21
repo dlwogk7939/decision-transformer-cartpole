@@ -86,10 +86,10 @@ This configuration achieved an average return of approximately **500 ± 0** over
 
 ## 📈 Example Graphs (from report)
 
-<p align="center">
-  <img src="docs/input_fraction_plot.png" width="400" alt="Data Fraction Graph">
-  <img src="docs/epochs_plot.png" width="400" alt="Epoch Graph"><br>
-  <img src="docs/transformer_size_plot.png" width="400" alt="Transformer Size Graph">
+<p>
+  <img src="docs/input_fraction_plot.png" width="600" alt="Data Fraction Graph"><br>
+  <img src="docs/epochs_plot.png" width="600" alt="Epoch Graph"><br>
+  <img src="docs/transformer_size_plot.png" width="600" alt="Transformer Size Graph">
 </p>
 
 *(These graphs visualize how performance changes with data fraction, epoch count, and transformer size.)*
